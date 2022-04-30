@@ -58,10 +58,11 @@ if (IS_SERVER) {
         if (k === "vote") {
             if (!votingAllowed) return;
 
-            const voteChar = v + 64;
+            const voteChar = v + AT_KEY;
 
             if (voteChar < A || voteChar > Z) { // Invalid vote!
                 console.log(`${sn} attempted to cast an invalid vote! (voted ${v})`);
+		return;
             }
 
             votes[sn] = voteChar;
@@ -69,7 +70,7 @@ if (IS_SERVER) {
     });
 } else {
     let canVote = false;
-    let vote = A - 64;
+    let vote = A - AT_KEY;
     
     music.setVolume(255);
 
