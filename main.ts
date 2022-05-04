@@ -3,12 +3,20 @@ radio.setGroup(69);
 radio.setTransmitPower(7);
 radio.setTransmitSerialNumber(true);
 
+/**
+ * protocol:
+ *      client-bound:
+ *          enabled: 1/0 -> enables/disables voting
+ *          ack: deviceSN -> acknowledges received vote
+ *      server-bound:
+ *          vote: option -> sends a vote; option must be within 1 and 26 (inclusive)
+ */
 
 const A = 65, Z = 90, // ASCII values for capital A and Z
       AT_KEY = 64;    // Unless we also want to display other positions too
 
 if (IS_SERVER) {
-    const votes: {
+    let votes: {
         [serialNumber: number]: number;
     } = {};
 
@@ -47,9 +55,16 @@ if (IS_SERVER) {
                 // This should also be a legal move, again assuming
                 // that the implementation is correct here
                 // @ts-ignore
-                console.log(`${String.fromCharCode(parseInt(key))}: ${votesByLetter[key]}`)
+                console.log(`${String.fromCharCode(parseInt(key))}: ${votesByLetter[key]}`);
             }
+        } else {
+            console.log("Voting disabled.");
         }
+    });
+
+    input.onButtonPressed(Button.AB, () => {
+        console.log("Resetting votes!");
+        votes = {};
     })
 
     radio.onReceivedValue((k, v) => {
@@ -62,7 +77,7 @@ if (IS_SERVER) {
 
             if (voteChar < A || voteChar > Z) { // Invalid vote!
                 console.log(`${sn} attempted to cast an invalid vote! (voted ${v})`);
-		return;
+                return;
             }
 
             votes[sn] = voteChar;
