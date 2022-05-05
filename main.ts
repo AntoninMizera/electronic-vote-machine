@@ -1,4 +1,4 @@
-const IS_SERVER = false;
+const IS_SERVER = true;
 radio.setGroup(69);
 radio.setTransmitPower(7);
 radio.setTransmitSerialNumber(true);
@@ -23,7 +23,11 @@ if (IS_SERVER) {
     let votingAllowed = false;
 
     input.onButtonPressed(Button.A, () => {
-        if (votingAllowed) return;
+        if (votingAllowed) {
+            console.log("Rebroadcasting vote enablement...");
+            radio.sendValue("enabled", 1);
+            return;
+        }
         votingAllowed = true;
 
         radio.sendValue("enabled", 1);
@@ -60,6 +64,8 @@ if (IS_SERVER) {
         } else {
             console.log("Voting disabled.");
         }
+
+        votes = {};
     });
 
     input.onButtonPressed(Button.AB, () => {
@@ -72,6 +78,12 @@ if (IS_SERVER) {
 
         if (k === "vote") {
             if (!votingAllowed) return;
+            if (!sn) return; // Ignore stupid devices not sending their SN :(
+
+            if (isNaN(v)) { // Ignore further stupid devices sending stupid values :(
+                console.log(`${sn}, for whatever reason, is sending a NaN to us...`);
+                return; 
+            }
 
             const voteChar = v + AT_KEY;
 
@@ -81,6 +93,9 @@ if (IS_SERVER) {
             }
 
             votes[sn] = voteChar;
+            console.log(`${sn} voted ${String.fromCharCode(voteChar)} (${v}, ${voteChar})`);
+
+            radio.sendValue("ack", sn);
         }
     });
 } else {
